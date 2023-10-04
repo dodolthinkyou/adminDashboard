@@ -254,7 +254,26 @@ while ($row = $result_dropdown->fetch()) {
     <link href="css/sb-admin-2.min.css" rel="stylesheet">
     <!-- Custom styles for this page -->
     <link href="vendor/datatables/dataTables.bootstrap4.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.9.2/html2pdf.bundle.min.js"></script>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/0.5.0-beta4/html2canvas.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/1.3.4/jspdf.debug.js"></script>
 
+    <<style>
+        label {
+        margin-right: 10px; // เพิ่มระยะห่างทางขวาของ label
+        }
+
+        .row {
+        margin-bottom: 20px; // เพิ่มระยะห่างด้านล่างของแถว
+        }
+
+        input, select {
+        margin-right: 20px; // เพิ่มระยะห่างทางขวา
+        margin-bottom: 10px; // เพิ่มระยะห่างด้านล่าง
+        }
+        </style>
 </head>
 
 <body id="page-top">
@@ -266,7 +285,7 @@ while ($row = $result_dropdown->fetch()) {
         <ul class="navbar-nav bg-gradient-primary sidebar sidebar-dark accordion" id="accordionSidebar">
 
             <!-- Sidebar - Brand -->
-            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="main.php">
+            <a class="sidebar-brand d-flex align-items-center justify-content-center" href="index.php">
                 <div class="sidebar-brand-text mx-3">MahasawatPQR</div>
             </a>
 
@@ -278,7 +297,7 @@ while ($row = $result_dropdown->fetch()) {
             </div>
             <!-- Nav Item - Tourism -->
             <li class="nav-item">
-                <a class="nav-link" href="main.php">
+                <a class="nav-link" href="index.php">
                     <i class="fas fa-fw fa-tachometer-alt"></i>
                     <span>Tourism Analysis</span></a>
             </li>
@@ -328,47 +347,52 @@ while ($row = $result_dropdown->fetch()) {
 
                         <!-- Page Heading -->
                         <h1 class="h3 mb-4 text-gray-800">Tourism Analysis Dashboard</h1>
-                        <a href= reportCustomer.php><input type=button value= Report></a>
                     </div>
 
                 </nav>
                 <!-- End of Topbar -->
+                <div class="text-right">
+                    <button id="generateReport">Generate Report</button> <br><br>
+                    <button onclick="captureAndExportToPDF()">Export to PDF</button>
+                </div>
                 <!-- ตัวเลือก -->
-                <form id="myForm" method="POST" action="reportCustomer.php">
+                <form id="myForm" method="POST" action="export.php">
                     <label for="startDate">Start Date:</label>
                     <input type="date" id="startDate" name="startDate" value="<?php echo $startDate; ?>">
                     <label for="endDate">End Date:</label>
-                    <input type="date" id="endDate" name="endDate" value="<?php echo $endDate; ?>">
-                    <label for="selectedGender">Gender:</label>
-                    <select id="selectedGender" name="selectedGender">
-                        <option value="">All</option>
-                        <?php
-                        foreach ($GenderTypesDropdown as $Gender) {
-                            $selected = ($Gender == $_POST['selectedGender']) ? 'selected' : '';
-                            echo "<option value='$Gender' $selected>$Gender</option>";
-                        }
-                        ?>
-                    </select>
-                    <label for="selectedAge">Age:</label>
-                    <select id="selectedAge" name="selectedAge">
-                        <option value="">All</option>
-                        <?php
-                        foreach ($ageTypesDropdown as $age) {
-                            $selected = ($age == $_POST['selectedAge']) ? 'selected' : '';
-                            echo "<option value='$age' $selected>$age</option>";
-                        }
-                        ?>
-                    </select>
-                    <label for="selectedNationality">Nationality:</label>
-                    <select id="selectedNationality" name="selectedNationality">
-                        <option value="">All</option>
-                        <?php
-                        foreach ($NationalityTypesDropdown as $Nationality) {
-                            $selected = ($Nationality == $_POST['selectedNationality']) ? 'selected' : '';
-                            echo "<option value='$Nationality' $selected>$Nationality</option>";
-                        }
-                        ?>
-                    </select>
+                    <input type="date" id="endDate" name="endDate" value="<?php echo $endDate; ?>"> <br>
+                    <div class="row justify-content-center mt-5 my-2">
+                        <label for="selectedGender">Gender:</label>
+                        <select id="selectedGender" name="selectedGender">
+                            <option value="">All</option>
+                            <?php
+                            foreach ($GenderTypesDropdown as $Gender) {
+                                $selected = ($Gender == $_POST['selectedGender']) ? 'selected' : '';
+                                echo "<option value='$Gender' $selected>$Gender</option>";
+                            }
+                            ?>
+                        </select>
+                        <label for="selectedAge">Age:</label>
+                        <select id="selectedAge" name="selectedAge">
+                            <option value="">All</option>
+                            <?php
+                            foreach ($ageTypesDropdown as $age) {
+                                $selected = ($age == $_POST['selectedAge']) ? 'selected' : '';
+                                echo "<option value='$age' $selected>$age</option>";
+                            }
+                            ?>
+                        </select>
+                        <label for="selectedNationality">Nationality:</label>
+                        <select id="selectedNationality" name="selectedNationality">
+                            <option value="">All</option>
+                            <?php
+                            foreach ($NationalityTypesDropdown as $Nationality) {
+                                $selected = ($Nationality == $_POST['selectedNationality']) ? 'selected' : '';
+                                echo "<option value='$Nationality' $selected>$Nationality</option>";
+                            }
+                            ?>
+                        </select>
+                    </div>
                 </form>
 
 
@@ -402,6 +426,22 @@ while ($row = $result_dropdown->fetch()) {
                         <div class="card shadow mb-4">
                             <div class="card-header py-3 d-flex flex-row align-items-center justify-content-between">
                                 <h6 class="m-0 font-weight-bold text-primary">Gender</h6>
+                                <form>
+                                    <select id="selectedGender" name="selectedGender">
+                                        <option value="">All</option>
+                                        <?php
+                                        foreach ($GenderTypesDropdown as $Gender) {
+                                            $selected = ($Gender == $_POST['selectedGender']) ? 'selected' : '';
+                                            echo "<option value='$Gender' $selected>$Gender</option>";
+                                        }
+                                        ?>
+                                    </select>
+                                </form>
+                                <script>
+                                        document.getElementById('selectedGender').addEventListener('change', function() {
+                        document.getElementById('myForm').submit();
+                    });
+                                    </script>
                                 <div class="dropdown no-arrow">
                                     <a class="dropdown-toggle" href="#" role="button" id="dropdownMenuLink" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
                                         <i class="fas fa-ellipsis-v fa-sm fa-fw text-gray-400"></i>
@@ -512,7 +552,7 @@ while ($row = $result_dropdown->fetch()) {
                             <!-- Card Body -->
                             <div class="card-body">
                                 <div class="chart-container">
-                                <canvas id="barChartEvent"></canvas>
+                                    <canvas id="barChartEvent"></canvas>
                                 </div>
                             </div>
                         </div>
@@ -824,6 +864,69 @@ while ($row = $result_dropdown->fetch()) {
     </script>
     <!-- Page level custom scripts -->
     <script src="js/demo/datatables-demo.js"></script>
+    <script>
+        function captureAndExportToPDF() {
+            html2canvas(document.body, {
+                onrendered: function(canvas) {
+                    var imgData = canvas.toDataURL('image/png');
+
+                    var pdf = new jsPDF({
+                        orientation: 'portrait',
+                    });
+
+                    var imgWidth = 210;
+                    var pageHeight = 295;
+                    var imgHeight = canvas.height * imgWidth / canvas.width;
+                    var heightLeft = imgHeight;
+                    var position = 0;
+
+                    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                    heightLeft -= pageHeight;
+
+                    while (heightLeft >= 0) {
+                        position = heightLeft - imgHeight;
+                        pdf.addPage();
+                        pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+                        heightLeft -= pageHeight;
+                    }
+
+                    pdf.save('Customer_Dashboard.pdf');
+                }
+            });
+        }
+
+        $(document).ready(function() {
+            $("#myForm").submit(function(e) {
+                e.preventDefault(); // ป้องกันการ submit แบบปกติของฟอร์ม
+
+                // บันทึกค่าจากฟอร์ม
+                let formData = $(this).serialize();
+
+                // AJAX request กลับไปที่ index.php หรือ endpoint ที่สามารถส่งผลลัพธ์ dashboard กลับมา
+                $.post("index.php", formData, function(data) {
+                    // ตรงนี้คือส่วนที่คุณควรแสดงผล dashboard ของคุณ, ตัวอย่างเช่น:
+                    $("#dashboard").html(data); // ปAssuming `data` is the updated dashboard content
+                });
+            });
+
+            // สำหรับปุ่ม "Report"
+            $("#generateReport").click(function(e) {
+                e.preventDefault();
+
+                // บันทึกค่าจากฟอร์ม
+                let formData = $("#myForm").serialize();
+
+                // ส่งข้อมูลไปยัง reportCustomer.php ในรูปแบบ POST
+                $.post("reportCustomer.php", formData, function(data) {
+                    // แสดงหน้า reportCustomer.php ในหน้าต่างใหม่
+                    let reportWindow = window.open("", "_blank");
+                    reportWindow.document.write(data);
+                });
+            });
+        });
+    </script>
+
+
 </body>
 
 </body>
